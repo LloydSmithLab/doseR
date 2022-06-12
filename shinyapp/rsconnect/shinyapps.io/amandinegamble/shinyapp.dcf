@@ -1,0 +1,11 @@
+name: shinyapp
+title:
+username:
+account: amandinegamble
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5668558
+bundleId: 6000927
+url: https://amandinegamble.shinyapps.io/shinyapp/
+when: 1655067956.44347
+lastSyncTime: 1655067956.44447

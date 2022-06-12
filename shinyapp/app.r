@@ -1,0 +1,232 @@
+library(shiny)
+library(shinyWidgets)
+library(ggplot2)
+
+ggtheme = theme_bw() +
+  theme(
+    plot.title = element_text(
+      size = 12,
+      face = "bold",
+      margin = margin(2, 2, 2, 2)
+    ),
+    plot.subtitle = element_text(
+      size = 12,
+      hjust = 0.5,
+      margin = margin(0, 0, 0, 0)
+    ),
+    plot.margin = margin(5, 5, 5, 5),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.title.y.right = element_text(angle = 90),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 12, color = "black"),
+    axis.line = element_line(size = 0.25, color = "black"),
+    axis.ticks = element_line(size = 0.25, color = "black"),
+    strip.text = element_text(size = 12, margin = margin(1, 1, 2, 2)),
+    strip.background = element_blank(),
+    legend.margin = margin(2, 2, 2, 2),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.key = element_rect(fill = NA, color = NA),
+    legend.key.size = unit(0.4, "cm"),
+    legend.background = element_rect(colour = "transparent", fill = ggplot2::alpha("white", 0)),
+    legend.position = "none"
+  )
+
+
+distributions = c("Normal", "Beta", "Gamma")
+
+alpha = 0.5
+
+dataA = NULL
+
+ui <- fluidPage(
+  titlePanel("doseR | Alpha release"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      strong("Pick a distribution, its parameters, and a plot below"),
+      br(),
+      br(),
+      
+      # inputs
+      selectizeInput(
+        "disA",
+        "Distribution",
+        choices = distributions,
+        selected = "Normal",
+        multiple = FALSE
+      ),
+      sliderInput(
+        "parA1",
+        "Parameter 1",
+        min = 0,
+        max = 10,
+        value = 1,
+        step = 0.1
+      ),
+      sliderInput(
+        "parA2",
+        "Parameter 2",
+        min = 0,
+        max = 10,
+        value = 1,
+        step = 0.1
+      ),
+      sliderInput(
+        "nn",
+        "Sample size",
+        min = 0,
+        max = 5000,
+        value = 1000
+      ),
+      selectizeInput(
+        "plot",
+        "Plot",
+        choices = c(
+          "Mean and standard deviation",
+          "Box plot",
+          "Violin plot",
+          "Scatter plot",
+          "Jittered scatter plot",
+          "Box plot + jittered scatter plot",
+          "Violin plot + jittered scatter plot"
+        ),
+        multiple = FALSE
+      )
+    ),
+    
+    mainPanel(
+      h2("Welcome"),
+      p(
+        "This app allows you to explore how different plot types represent data following different paramettric distributions.
+        The objective is for you to understand how effective (or not) specific plot types are at representing the data distribution.
+        There is no need to know about the specific of the parametric distributions. However, feel free to learn more about the ",
+        a("Normal distribution", href = "https://en.wikipedia.org/wiki/Normal_distribution"),
+        ", ",
+        a("Gamma distribution", href = "https://en.wikipedia.org/wiki/Gamma_distribution"),
+        "and the",
+        a("Beta distribution", href = "https://en.wikipedia.org/wiki/Beta_distribution"),
+        "."
+      ),
+      p(
+        "Questions and comments @ ",
+        a("amandine.gamble@gmail.com", href = "mailto:aamandine.gamble@gmail.com")
+      ),
+      h3("Suggested distributions"),
+      p("Beta(0.2, 0.2) and Gamma(1, 0.1)"),
+      h3("Selected plot"),
+      plotOutput("visual"),
+      h3("Histogram"),
+      plotOutput("histogram")
+    )
+  )
+)
+
+server <- function(input, output) {
+  # Data generation
+  distribution = reactive(input$disA)
+  dataA <- reactive({
+    if (distribution() == "Normal") {
+      data.frame(Value = rnorm(input$nn, input$parA1, input$parA2),
+                 Dataset = "Dataset A")
+    } else if (distribution() == "Beta") {
+      data.frame(
+        Value = rbeta(
+          input$nn,
+          shape1 = input$parA1,
+          shape2 = input$parA2
+        ),
+        Dataset = "Dataset A"
+      )
+    } else if (distribution() == "Gamma") {
+      data.frame(
+        Value = rgamma(
+          input$nn,
+          shape = input$parA1,
+          rate = input$parA2
+        ),
+        Dataset = "Dataset A"
+      )
+    }
+  })
+  
+  # Plots
+  
+  output$visual <- renderPlot({
+    p_mean = ggplot(data = dataA(), aes(x = Dataset)) +
+      geom_point(y = mean(dataA()$Value), size = 10) +
+      geom_errorbar(aes(
+        ymin = mean(dataA()$Value) - sd(dataA()$Value),
+        ymax = mean(dataA()$Value) + sd(dataA()$Value)
+      ),
+      width = .2) +
+      ylab("Value (mean and standard deviation)") +
+      ggtheme + theme(axis.text.x = element_blank())
+    
+    p_box = ggplot(data = dataA(), aes(x = Dataset, y = Value)) +
+      geom_boxplot() +
+      ggtheme + theme(axis.text.x = element_blank())
+    
+    p_violin = ggplot(data = dataA(), aes(x = Dataset, y = Value)) +
+      geom_violin() +
+      ggtheme + theme(axis.text.x = element_blank())
+    
+    p_scatter = ggplot(data = dataA(), aes(x = Dataset, y = Value)) +
+      geom_point(alpha = alpha) +
+      ggtheme + theme(axis.text.x = element_blank())
+    
+    p_jitter = ggplot(data = dataA(), aes(x = Dataset, y = Value)) +
+      geom_jitter(alpha = alpha,
+                  width = 0.1,
+                  height = 0) +
+      ggtheme + theme(axis.text.x = element_blank())
+    
+    p_box_jitter = ggplot(data = dataA(), aes(x = Dataset, y = Value)) +
+      geom_boxplot() +
+      geom_jitter(alpha = alpha,
+                  width = 0.1,
+                  height = 0) +
+      ggtheme + theme(axis.text.x = element_blank())
+    
+    p_violin_jitter = ggplot(data = dataA(), aes(x = Dataset, y = Value)) +
+      geom_violin() +
+      geom_jitter(alpha = alpha,
+                  width = 0.1,
+                  height = 0) +
+      ggtheme + theme(axis.text.x = element_blank())
+    
+    if (input$plot == "Mean and standard deviation")  {
+      print(p_mean)
+    }
+    if (input$plot == "Box plot")  {
+      print(p_box)
+    }
+    if (input$plot == "Violin plot")  {
+      print(p_violin)
+    }
+    if (input$plot == "Scatter plot")  {
+      print(p_scatter)
+    }
+    if (input$plot == "Jittered scatter plot")  {
+      print(p_jitter)
+    }
+    if (input$plot == "Box plot + jittered scatter plot")  {
+      print(p_box_jitter)
+    }
+    if (input$plot == "Violin plot + jittered scatter plot")  {
+      print(p_violin_jitter)
+    }
+    
+  })
+  
+  output$histogram <- renderPlot({
+    ggplot(data = dataA(), aes(x = Value)) +
+      geom_histogram(fill = "gray", color = "black") +
+      ylab("Count") +
+      ggtheme
+  })
+  
+}
+
+shinyApp(ui = ui, server = server)
