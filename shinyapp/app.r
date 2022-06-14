@@ -1,3 +1,8 @@
+# inspirations
+# https://riptutorial.com/shiny/example/32449/uploading-csv-files-to-shiny
+# https://shiny.rstudio.com/gallery/ncaa-swim-team-finder.html
+
+
 library(shiny)
 library(shinyWidgets)
 library(ggplot2)
@@ -40,88 +45,147 @@ alpha = 0.5
 
 dataA = NULL
 
-ui <- fluidPage(
-  titlePanel("doseR | Alpha release"),
+ui <- fluidPage(#titlePanel("doseR | Alpha release"),
   
-  sidebarLayout(
-    sidebarPanel(
-      strong("Pick a distribution, its parameters, and a plot below"),
-      br(),
-      br(),
+  navbarPage(
+    "doseR | Alpha release",
+    
+    tabPanel(
+      "Home",
+      fluid = TRUE,
       
-      # inputs
-      selectizeInput(
-        "disA",
-        "Distribution",
-        choices = distributions,
-        selected = "Normal",
-        multiple = FALSE
+      h2("Welcome to doseR"),
+      p(
+        "This app allows you to explore explore, fit and assess dose-response models to better understand and quantify host-pathogen interactions.", 
+        br(),
+        "doseR is part of the Pyterverse."
       ),
-      sliderInput(
-        "parA1",
-        "Parameter 1",
-        min = 0,
-        max = 10,
-        value = 1,
-        step = 0.1
+      p(
+        "Authors: Amandine Gamble, Philip Lee, Dylan H. Morris, James O. Lloyd-Smith", 
+        br(),  
+        "Affiliation: University of California Los Angeles"
       ),
-      sliderInput(
-        "parA2",
-        "Parameter 2",
-        min = 0,
-        max = 10,
-        value = 1,
-        step = 0.1
-      ),
-      sliderInput(
-        "nn",
-        "Sample size",
-        min = 0,
-        max = 5000,
-        value = 1000
-      ),
-      selectizeInput(
-        "plot",
-        "Plot",
-        choices = c(
-          "Mean and standard deviation",
-          "Box plot",
-          "Violin plot",
-          "Scatter plot",
-          "Jittered scatter plot",
-          "Box plot + jittered scatter plot",
-          "Violin plot + jittered scatter plot"
-        ),
-        multiple = FALSE
+      p(
+        "Questions and comments: ",
+        a("amandine.gamble@gmail.com", href = "mailto:aamandine.gamble@gmail.com")
+      ), 
+      p(
+        "Code: ",
+        a("github.com/LloydSmithLab/doseR", href = "https://github.com/LloydSmithLab/doseR")
+      ), 
+      
+      h2("Time-dependent dose-response model"), 
+      #withMathJax("$$\\text{Display formula in heading }X_n=X_{n-1}-\\varepsilon$$")
+      img(src='doseR_model.png', height="50%", width="50%", align = "center"), 
+      p(
+        "References: ", 
+        br(),
+        "- Buchholz D. W.*, Gamble A.*, Morris D. H., Sahler J., Jager M., Martins M., Monreal I. A., Imbiakha B., Borremans B., Snedden C. E., Kushner N. L., Diel D., Van de Walle G., August A., Lloyd-Smith J. O. and Aguilar H. C. Viral exposure dose predicts incubation period: an illustration with SARS-CoV-2 in mice. In preparation. (* Equal contribution)", 
+        br(),  
+        "- Gamble A.*, Buchholz D. W.*, Imbiakha B., Sahler J., Morris D. H., Jager M., Martins M., Kushner N. L., Diel D., Van de Walle G., August A., Aguilar H. C. and Lloyd-Smith J. O. Faster replication rate is associated with shorter incubation period in infection with the Delta lineage of SARS-CoV-2. In preparation. (* Equal contribution)"
       )
     ),
     
-    mainPanel(
-      h2("Welcome"),
-      p(
-        "This app allows you to explore how different plot types represent data following different paramettric distributions.
-        The objective is for you to understand how effective (or not) specific plot types are at representing the data distribution.
-        There is no need to know about the specific of the parametric distributions. However, feel free to learn more about the ",
-        a("Normal distribution", href = "https://en.wikipedia.org/wiki/Normal_distribution"),
-        ", ",
-        a("Gamma distribution", href = "https://en.wikipedia.org/wiki/Gamma_distribution"),
-        "and the",
-        a("Beta distribution", href = "https://en.wikipedia.org/wiki/Beta_distribution"),
-        "."
-      ),
-      p(
-        "Questions and comments @ ",
-        a("amandine.gamble@gmail.com", href = "mailto:aamandine.gamble@gmail.com")
-      ),
-      h3("Suggested distributions"),
-      p("Beta(0.2, 0.2) and Gamma(1, 0.1)"),
-      h3("Selected plot"),
-      plotOutput("visual"),
-      h3("Histogram"),
-      plotOutput("histogram")
+    
+    tabPanel(
+      "Data simulation",
+      fluid = TRUE,
+      
+      sidebarLayout(
+        sidebarPanel(
+          strong("Pick a distribution, its parameters, and a plot below"),
+          br(),
+          br(),
+          
+          # inputs
+          selectizeInput(
+            "disA",
+            "Distribution",
+            choices = distributions,
+            selected = "Normal",
+            multiple = FALSE
+          ),
+          sliderInput(
+            "parA1",
+            "Parameter 1",
+            min = 0,
+            max = 10,
+            value = 1,
+            step = 0.1
+          ),
+          sliderInput(
+            "parA2",
+            "Parameter 2",
+            min = 0,
+            max = 10,
+            value = 1,
+            step = 0.1
+          ),
+          sliderInput(
+            "nn",
+            "Sample size",
+            min = 0,
+            max = 5000,
+            value = 1000
+          ),
+          selectizeInput(
+            "plot",
+            "Plot",
+            choices = c(
+              "Mean and standard deviation",
+              "Box plot",
+              "Violin plot",
+              "Scatter plot",
+              "Jittered scatter plot",
+              "Box plot + jittered scatter plot",
+              "Violin plot + jittered scatter plot"
+            ),
+            multiple = FALSE
+          )
+        ),
+        
+        mainPanel(
+          h3("Suggested distributions"),
+          p("Beta(0.2, 0.2) and Gamma(1, 0.1)"),
+          h3("Selected plot"),
+          plotOutput("visual"),
+          h3("Histogram"),
+          plotOutput("histogram")
+        )
+      )
+    ),
+    
+    tabPanel(
+      "Model fitting",
+      fluid = TRUE,
+      
+      sidebarLayout(
+        sidebarPanel(
+          strong("Pick a distribution, its parameters, and a plot below"),
+          br(),
+          br(),
+          
+          fileInput(
+            'target_upload',
+            'Choose file to upload',
+            accept = c('text/csv',
+                       'text/comma-separated-values',
+                       '.csv')
+          ),
+          radioButtons(
+            "separator",
+            "Separator: ",
+            choices = c(";", ",", ":"),
+            selected = ";",
+            inline = TRUE
+          )
+        ),
+        
+        mainPanel(DT::dataTableOutput("sample_table"))
+      )
+      
     )
-  )
-)
+  ))
 
 server <- function(input, output) {
   # Data generation
@@ -225,6 +289,22 @@ server <- function(input, output) {
       geom_histogram(fill = "gray", color = "black") +
       ylab("Count") +
       ggtheme
+  })
+  
+  df_products_upload <- reactive({
+    inFile <- input$target_upload
+    if (is.null(inFile))
+      return(NULL)
+    df <-
+      read.csv(inFile$datapath,
+               header = TRUE,
+               sep = input$separator)
+    return(df)
+  })
+  
+  output$sample_table <- DT::renderDataTable({
+    df <- df_products_upload()
+    DT::datatable(df)
   })
   
 }

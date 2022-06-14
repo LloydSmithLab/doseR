@@ -1,3 +1,5 @@
+#https://github.com/gpilgrim2670/SwimMap/blob/master/app.R
+
 #Navbar structure for UI
 navbarPage("doseR | Alpha release", theme = shinytheme("lumen"),
            tabPanel("Home", fluid = TRUE, icon = icon("globe-americas"),
@@ -309,4 +311,44 @@ navbarPage("doseR | Alpha release", theme = shinytheme("lumen"),
                       )
            )
 )
+
+# https://riptutorial.com/shiny/example/32449/uploading-csv-files-to-shiny
+
+library(shiny)
+library(DT)
+
+# Define UI
+ui <- shinyUI(fluidPage(
+  
+  fileInput('target_upload', 'Choose file to upload',
+            accept = c(
+              'text/csv',
+              'text/comma-separated-values',
+              '.csv'
+            )),
+  radioButtons("separator","Separator: ",choices = c(";",",",":"), selected=";",inline=TRUE),
+  DT::dataTableOutput("sample_table")
 )
+)
+
+# Define server logic
+server <- shinyServer(function(input, output) {
+  
+  df_products_upload <- reactive({
+    inFile <- input$target_upload
+    if (is.null(inFile))
+      return(NULL)
+    df <- read.csv(inFile$datapath, header = TRUE,sep = input$separator)
+    return(df)
+  })
+  
+  output$sample_table<- DT::renderDataTable({
+    df <- df_products_upload()
+    DT::datatable(df)
+  })
+  
+}
+)
+
+# Run the application 
+shinyApp(ui = ui, server = server)
