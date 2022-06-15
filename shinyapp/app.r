@@ -10,12 +10,12 @@
   ggtheme = theme_bw() +
     theme(
       plot.title = element_text(
-        size = 12,
+        size = 16,
         face = "bold",
         margin = margin(2, 2, 2, 2)
       ),
       plot.subtitle = element_text(
-        size = 12,
+        size = 16,
         hjust = 0.5,
         margin = margin(0, 0, 0, 0)
       ),
@@ -23,15 +23,15 @@
       panel.grid.minor = element_blank(),
       panel.grid.major = element_blank(),
       axis.title.y.right = element_text(angle = 90),
-      axis.title = element_text(size = 12),
-      axis.text = element_text(size = 12, color = "black"),
+      axis.title = element_text(size = 16),
+      axis.text = element_text(size = 16, color = "black"),
       axis.line = element_line(size = 0.25, color = "black"),
       axis.ticks = element_line(size = 0.25, color = "black"),
       strip.text = element_text(size = 12, margin = margin(1, 1, 2, 2)),
       strip.background = element_blank(),
       legend.margin = margin(2, 2, 2, 2),
-      legend.title = element_text(size = 12),
-      legend.text = element_text(size = 12),
+      legend.title = element_text(size = 16),
+      legend.text = element_text(size = 16),
       legend.key = element_rect(fill = NA, color = NA),
       legend.key.size = unit(0.4, "cm"),
       legend.background = element_rect(colour = "transparent", fill = ggplot2::alpha("white", 0)),
@@ -42,7 +42,7 @@
   # alpha = 0.5
   
   targets = c(10^1, 10^2, 10^3, 10^4, 10^5)
-  nn = 5
+  nn = 20
   tt = seq(0, 14, 0.1)
   
   f_infection_exp_cont = function(D_target, pinf, pcont, kk, tt, cc) {
@@ -102,12 +102,37 @@
     data[is.na(data$diseased), "diseased"] = 0
   
     data[data$lambda_t<0 | is.na(data$lambda_t<0), "lambda_t"] = 0
-    data[data$Lambda_t<0 | is.na(data$Lambda_t<0), "Lambda_t"] = 0
+    #data[data$Lambda_t<0 | is.na(data$Lambda_t<0), "Lambda_t"] = 0
     data[data$P_disease_t<0 | is.na(data$P_disease_t<0), "P_disease_t"] = 0
     
     return(data)
     
   }
+  
+  f_summary = function(data){
+    
+    infected = unique(data[data$infected == 1, "sim"])
+    diseased = unique(data[data$diseased == 1, "sim"])
+    
+    summary = unique(data[, c("D_target", "sim")])
+    
+    summary$infected = summary$diseased = 0
+    
+    summary[is.element(summary$sim, infected), "infected"] = 1
+    summary[is.element(summary$sim, diseased), "diseased"] = 1
+    
+    summary$incubation = NA
+    for (ii in 1:nrow(summary)){
+      if (nrow(data[data$sim == summary$sim[ii] & data$diseased == 1, ]) > 0){
+        summary$incubation[ii] = min(data[data$sim == summary$sim[ii] & data$diseased == 1, "tt"])
+      }else{
+        summary$incubation[ii] = Inf
+      }
+    }
+    
+    return(summary)
+  }
+  
   
   ui <- fluidPage(#titlePanel("doseR | Alpha release"),
     
@@ -191,7 +216,7 @@
             ),
             sliderInput(
               "kk",
-              "Pathogen replication rate (/ time point)",
+              "Pathogen replication rate",
               min = 0,
               max = 10,
               value = 1,
@@ -210,10 +235,8 @@
           mainPanel(
             h3("Individual status"),
             plotOutput("plot_individual", height = "800px"),
-            h3("Classical dose-response curve"),
-            plotOutput("plot_DR"), 
-            h3("Incubation time"),
-            plotOutput("plot_incub")
+            h3("Data summary"),
+            splitLayout(cellWidths = c("50%", "50%"), plotOutput("plot_DR"), plotOutput("plot_incub"))
           )
       )
       ),
@@ -285,10 +308,10 @@
       }
     })
     
-    # data2 <- reactive({
-    #   data.frame(f_summary(data))
-    # })
-    # 
+    summary <- reactive({
+      data.frame(f_summary(data()))
+    })
+
     
     
     output$plot_individual <- renderPlot({
@@ -349,11 +372,45 @@
     #(plot_virus | plot_p_disease | plot_diseased) + plot_layout(guides = "collect")
   
     print(plot_diseased + facet_grid(D_target~.))
+    
+
       
-      print(input$pinf)
-      print(data())
+      #print(input$pinf)
+      #print(data())
+    print(summary())
     
     })
+    
+    output$plot_DR <- renderPlot({
+      plot_DR = ggplot(summary(), aes(x = log(D_target), y = diseased)) +
+        geom_jitter(width = 0.05, height = 0.05, 
+                    fill = "#54278f",
+                    color = "#54278f", shape = 21, size = 2) +
+        stat_smooth(method = "glm", se = F, fullrange = T,
+                    method.args = list(family = binomial), 
+                    color = "#9e9ac8") +
+        xlab("Dose") + ylab("Sympatomatic status") +
+        scale_x_continuous(breaks = c(log(targets)), labels = c(targets)) +
+          scale_y_continuous(limits = c(-0.1, 1.1), breaks = c(0, 1)) +
+        ggtheme
+      
+      print(plot_DR)}
+    )
+    
+    output$plot_incub <- renderPlot({
+      plot_incub = ggplot(summary(), aes(x = log(D_target), y = incubation)) +
+        geom_jitter(width = 0.05, height = 0.05, 
+                    fill = "#54278f",
+                    color = "#54278f", shape = 21, size = 2) +
+        stat_smooth(method = "lm", se = F, fullrange = T,
+                    color = "#9e9ac8") +
+        xlab("Dose") + ylab("Incubation time (day)") +
+        scale_x_continuous(breaks = c(log(targets)), labels = c(targets)) +
+        scale_y_continuous(limits = c(-0.1, 14.1), breaks = seq(0, 14, 2)) +
+        ggtheme
+      
+      print(plot_incub)}
+    )
     
     
     
