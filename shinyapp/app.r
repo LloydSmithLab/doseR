@@ -7,29 +7,29 @@ library(shiny)
 library(shinyWidgets)
 library(ggplot2)
 
-packages = c(
-  "kableExtra",
-  "ggplot2",
-  "survival",
-  "survminer",
-  "patchwork",
-  "cowplot",
-  "PropCIs",
-  "rstatix",
-  "rstan",
-  "shinystan",
-  "RColorBrewer",
-  "bayesplot",
-  "rstanarm"
-)
-
-suppressMessages(invisible(lapply(packages,
-                                  function(x) {
-                                    if (!require(x, character.only = TRUE)) {
-                                      install.packages(x, dependencies = TRUE)
-                                      library(x, character.only = TRUE)
-                                    }
-                                  })))
+# packages = c(
+#   "kableExtra",
+#   "ggplot2",
+#   "survival",
+#   "survminer",
+#   "patchwork",
+#   "cowplot",
+#   "PropCIs",
+#   "rstatix",
+#   "rstan",
+#   "shinystan",
+#   "RColorBrewer",
+#   "bayesplot",
+#   "rstanarm"
+# )
+# 
+# suppressMessages(invisible(lapply(packages,
+#                                   function(x) {
+#                                     if (!require(x, character.only = TRUE)) {
+#                                       install.packages(x, dependencies = TRUE)
+#                                       library(x, character.only = TRUE)
+#                                     }
+#                                   })))
 
 ggtheme = theme_bw() +
   theme(
@@ -336,7 +336,7 @@ ui <- fluidPage(#titlePanel("doseR | Alpha release"),
             value = 0.5,
             step = 0.05
           ),
-          
+
           sliderInput(
             "pcont",
             "Priors on infection control probability mean",
@@ -345,7 +345,7 @@ ui <- fluidPage(#titlePanel("doseR | Alpha release"),
             value = 0.5,
             step = 0.05
           ),
-          
+
           sliderInput(
             "pcont",
             "Priors on infection control probability standard deviation",
@@ -354,7 +354,7 @@ ui <- fluidPage(#titlePanel("doseR | Alpha release"),
             value = 0.5,
             step = 0.05
           ),
-          
+
           sliderInput(
             "kk",
             "Priors on pathogen replication rate mean",
@@ -363,7 +363,7 @@ ui <- fluidPage(#titlePanel("doseR | Alpha release"),
             value = 1,
             step = 0.05
           ),
-          
+
           sliderInput(
             "kk",
             "Priors on pathogen replication rate standard deviation",
@@ -372,7 +372,7 @@ ui <- fluidPage(#titlePanel("doseR | Alpha release"),
             value = 1,
             step = 0.05
           ),
-          
+
           sliderInput(
             "cc",
             "Priors on tolerance to disease mean",
@@ -381,7 +381,7 @@ ui <- fluidPage(#titlePanel("doseR | Alpha release"),
             value = 10,
             step = 1
           ),
-          
+
           sliderInput(
             "cc",
             "Priors on tolerance to disease standard deviation",
