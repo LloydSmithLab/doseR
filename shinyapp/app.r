@@ -413,13 +413,22 @@ ui <- fluidPage(#titlePanel("doseR | Alpha release"),
           br(),
           h2("Output"),
           #withMathJax("$$\\text{Display formula in heading }X_n=X_{n-1}-\\varepsilon$$")
-          # img(
-          #   src = 'doseR_output.png',
-          #   height = "100%",
-          #   width = "100%",
-          #   align = "center"
-          # ),
-          p()
+          img(
+            src = 'doseR_output.png',
+            height = "100%",
+            width = "100%",
+            align = "center"
+          ),
+          p(p(
+            "Download ",
+            a(
+              href = "doseR_output_full.csv",
+              "posteriors",
+              download = NA,
+              target = "_blank"
+            ),
+            "."
+          ),)
         )
       )
       
